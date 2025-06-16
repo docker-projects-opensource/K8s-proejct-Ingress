@@ -1,0 +1,747 @@
+# .github/workflows/deploy.yml
+name: Deploy to GKE
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Choose action to perform'
+        required: true
+        default: 'deploy'
+        type: choice
+        options:
+        - deploy
+        - delete
+      
+      # DEPLOYMENT OPTIONS
+      deploy_secrets:
+        description: '🔐 Deploy secrets and credentials'
+        required: false
+        default: false
+        type: boolean
+      deploy_database:
+        description: '🗄️ Deploy database components (PVC, DB deployment, init)'
+        required: false
+        default: false
+        type: boolean
+      deploy_backend:
+        description: '🔙 Deploy backend application'
+        required: false
+        default: false
+        type: boolean
+      deploy_frontend:
+        description: '🎨 Deploy frontend application'
+        required: false
+        default: false
+        type: boolean
+      deploy_ingress:
+        description: '🌐 Deploy ingress controller'
+        required: false
+        default: false
+        type: boolean
+      deploy_support:
+        description: '🔧 Deploy support resources'
+        required: false
+        default: false
+        type: boolean
+      deploy_backup:
+        description: '💾 Deploy backup resources'
+        required: false
+        default: false
+        type: boolean
+      deploy_all:
+        description: '🚀 Deploy all components (overrides individual selections)'
+        required: false
+        default: false
+        type: boolean
+
+      # DELETION OPTIONS
+      delete_ingress:
+        description: '🌐❌ Delete ingress controller'
+        required: false
+        default: false
+        type: boolean
+      delete_frontend:
+        description: '🎨❌ Delete frontend application'
+        required: false
+        default: false
+        type: boolean
+      delete_backend:
+        description: '🔙❌ Delete backend application'
+        required: false
+        default: false
+        type: boolean
+      delete_support:
+        description: '🔧❌ Delete support resources'
+        required: false
+        default: false
+        type: boolean
+      delete_database:
+        description: '🗄️❌ Delete database (preserves PVC by default)'
+        required: false
+        default: false
+        type: boolean
+      delete_pvc:
+        description: '💥❌ Delete Persistent Volume Claims (DATA LOSS!)'
+        required: false
+        default: false
+        type: boolean
+      delete_secrets:
+        description: '🔐❌ Delete secrets and credentials'
+        required: false
+        default: false
+        type: boolean
+      delete_backup:
+        description: '💾❌ Delete backup resources'
+        required: false
+        default: false
+        type: boolean
+      delete_all:
+        description: '💥❌ Delete ALL resources (DESTRUCTIVE!)'
+        required: false
+        default: false
+        type: boolean
+      
+      # SAFETY OPTIONS
+      confirm_deletion:
+        description: '⚠️ I understand this will delete resources (required for deletions)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PROJECT_ID: turnkey-guild-441104-f3
+  GKE_CLUSTER: dev-devops-gke
+  GKE_REGION: us-central1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'deploy' }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Install gke-gcloud-auth-plugin
+      run: |
+        gcloud components install gke-gcloud-auth-plugin
+        
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --zone ${{ env.GKE_REGION }}
+        
+    - name: Verify cluster connection
+      run: |
+        echo "Connected to cluster:"
+        kubectl cluster-info
+        kubectl get nodes
+
+    # Deploy secrets first (if selected or deploy_all is true)
+    - name: Deploy Secrets and Credentials
+      if: ${{ github.event.inputs.deploy_secrets == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🔐 Deploying secrets and credentials..."
+        if [ -f "db-credentials-secret.yaml" ]; then
+          kubectl apply -f db-credentials-secret.yaml
+        fi
+        if [ -f "deployment/db-credentials-secret.yaml" ]; then
+          kubectl apply -f deployment/db-credentials-secret.yaml
+        fi
+        echo "✅ Secrets deployed successfully"
+
+    # Deploy database components (if selected or deploy_all is true)
+    - name: Deploy Database Components
+      if: ${{ github.event.inputs.deploy_database == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🗄️ Deploying database components..."
+        
+        # Deploy PVC first
+        if [ -f "deployment/pvc.yaml" ]; then
+          echo "Deploying PVC..."
+          kubectl apply -f deployment/pvc.yaml
+        fi
+        
+        # Deploy database
+        if [ -f "deployment/db.yaml" ]; then
+          echo "Deploying database service..."
+          kubectl apply -f deployment/db.yaml
+        fi
+        
+        if [ -f "deployment/database-deployment.yaml" ]; then
+          echo "Deploying database deployment..."
+          kubectl apply -f deployment/database-deployment.yaml
+        fi
+        
+        # Wait for database to be ready
+        echo "Waiting for database to be ready..."
+        kubectl wait --for=condition=ready pod -l app=database --timeout=300s || true
+        
+        # Deploy database initialization
+        if [ -f "deployment/database-init.yaml" ]; then
+          echo "Deploying database initialization..."
+          kubectl apply -f deployment/database-init.yaml
+        fi
+        
+        if [ -f "db-init.yaml" ]; then
+          echo "Deploying db-init job..."
+          kubectl apply -f db-init.yaml
+        fi
+        
+        echo "✅ Database components deployed successfully"
+
+    # Deploy support resources (if selected or deploy_all is true)
+    - name: Deploy Support Resources
+      if: ${{ github.event.inputs.deploy_support == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🔧 Deploying support resources..."
+        if [ -f "deployment/support-resources.yaml" ]; then
+          kubectl apply -f deployment/support-resources.yaml
+        fi
+        if [ -f "service.yaml" ]; then
+          kubectl apply -f service.yaml
+        fi
+        echo "✅ Support resources deployed successfully"
+
+    # Deploy backend (if selected or deploy_all is true)
+    - name: Deploy Backend
+      if: ${{ github.event.inputs.deploy_backend == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🔙 Deploying backend application..."
+        if [ -f "deployment/backend.yaml" ]; then
+          kubectl apply -f deployment/backend.yaml
+        fi
+        
+        # Wait for backend to be ready
+        echo "Waiting for backend to be ready..."
+        kubectl wait --for=condition=ready pod -l app=backend --timeout=300s || true
+        
+        echo "✅ Backend deployed successfully"
+
+    # Deploy frontend (if selected or deploy_all is true)
+    - name: Deploy Frontend
+      if: ${{ github.event.inputs.deploy_frontend == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🎨 Deploying frontend application..."
+        if [ -f "deployment/frontend.yaml" ]; then
+          kubectl apply -f deployment/frontend.yaml
+        fi
+        
+        # Wait for frontend to be ready
+        echo "Waiting for frontend to be ready..."
+        kubectl wait --for=condition=ready pod -l app=frontend --timeout=300s || true
+        
+        echo "✅ Frontend deployed successfully"
+
+    # Deploy ingress last (if selected or deploy_all is true)
+    - name: Deploy Ingress
+      if: ${{ github.event.inputs.deploy_ingress == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🌐 Deploying ingress controller..."
+        if [ -f "deployment/ingress.yaml" ]; then
+          kubectl apply -f deployment/ingress.yaml
+        fi
+        if [ -f "ingress.yaml" ]; then
+          kubectl apply -f ingress.yaml
+        fi
+        echo "✅ Ingress deployed successfully"
+
+    # Deploy backup resources (if selected or deploy_all is true)
+    - name: Deploy Backup Resources
+      if: ${{ github.event.inputs.deploy_backup == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "💾 Deploying backup resources..."
+        if [ -f "deployment/finsecure-backup.yaml" ]; then
+          kubectl apply -f deployment/finsecure-backup.yaml
+        fi
+        echo "✅ Backup resources deployed successfully"
+
+  # DELETION JOB
+  delete:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action == 'delete' }}
+    
+    steps:
+    - name: Safety Check - Confirmation Required
+      if: ${{ github.event.inputs.confirm_deletion != 'true' }}
+      run: |
+        echo "❌ DELETION BLOCKED: Confirmation required!"
+        echo "⚠️  You must check 'I understand this will delete resources' to proceed with deletions."
+        echo "🚨 This is a safety measure to prevent accidental resource deletion."
+        exit 1
+        
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Install gke-gcloud-auth-plugin
+      run: |
+        gcloud components install gke-gcloud-auth-plugin
+        
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --zone ${{ env.GKE_REGION }}
+        
+    - name: Show Current Resources (Before Deletion)
+      run: |
+        echo "📊 Current resources before deletion:"
+        echo ""
+        echo "=== PODS ==="
+        kubectl get pods -o wide || echo "No pods found"
+        echo ""
+        echo "=== SERVICES ==="
+        kubectl get services || echo "No services found"
+        echo ""
+        echo "=== INGRESS ==="
+        kubectl get ingress || echo "No ingress found"
+        echo ""
+        echo "=== PVC ==="
+        kubectl get pvc || echo "No PVCs found"
+        echo ""
+
+    # Delete in reverse order of deployment
+    
+    # Delete Ingress first (remove external access)
+    - name: Delete Ingress
+      if: ${{ github.event.inputs.delete_ingress == 'true' || github.event.inputs.delete_all == 'true' }}
+      run: |
+        echo "🌐❌ Deleting ingress resources..."
+        
+        # Delete ingress resources
+        if [ -f "deployment/ingress.yaml" ]; then
+          kubectl delete -f deployment/ingress.yaml --ignore-not-found=true
+        fi
+        if [ -f "ingress.yaml" ]; then
+          kubectl delete -f ingress.yaml --ignore-not-found=true
+        fi
+        
+        # Delete any orphaned ingress resources
+        kubectl delete ingress --all --ignore-not-found=true
+        
+        echo "✅ Ingress resources deleted"
+
+    # Delete Frontend
+    - name: Delete Frontend
+      if: ${{ github.event.inputs.delete_frontend == 'true' || github.event.inputs.delete_all == 'true' }}
+      run: |
+        echo "🎨❌ Deleting frontend application..."
+        
+        if [ -f "deployment/frontend.yaml" ]; then
+          kubectl delete -f deployment/frontend.yaml --ignore-not-found=true
+        fi
+        
+        # Force delete any remaining frontend resources
+        kubectl delete deployment,service,pod -l app=frontend --ignore-not-found=true
+        
+        echo "✅ Frontend application deleted"
+
+    # Delete Backend
+    - name: Delete Backend
+      if: ${{ github.event.inputs.delete_backend == 'true' || github.event.inputs.delete_all == 'true' }}
+      run: |
+        echo "🔙❌ Deleting backend application..."
+        
+        if [ -f "deployment/backend.yaml" ]; then
+          kubectl delete -f deployment/backend.yaml --ignore-not-found=true
+        fi
+        
+        # Force delete any remaining backend resources
+        kubectl delete deployment,service,pod -l app=backend --ignore-not-found=true
+        
+        echo "✅ Backend application deleted"
+
+    # Delete Support Resources
+    - name: Delete Support Resources
+      if: ${{ github.event.inputs.delete_support == 'true' || github.event.inputs.delete_all == 'true' }}
+      run: |
+        echo "🔧❌ Deleting support resources..."
+        
+        if [ -f "deployment/support-resources.yaml" ]; then
+          kubectl delete -f deployment/support-resources.yaml --ignore-not-found=true
+        fi
+        if [ -f "service.yaml" ]; then
+          kubectl delete -f service.yaml --ignore-not-found=true
+        fi
+        
+        echo "✅ Support resources deleted"
+
+    # Delete Backup Resources
+    - name: Delete Backup Resources
+      if: ${{ github.event.inputs.delete_backup == 'true' || github.event.inputs.delete_all == 'true' }}
+      run: |
+        echo "💾❌ Deleting backup resources..."
+        
+        if [ -f "deployment/finsecure-backup.yaml" ]; then
+          kubectl delete -f deployment/finsecure-backup.yaml --ignore-not-found=true
+        fi
+        
+        # Delete backup jobs and cronjobs
+        kubectl delete job,cronjob -l app=backup --ignore-not-found=true
+        
+        echo "✅ Backup resources deleted"
+
+    # Delete Database (but preserve PVC by default)
+    - name: Delete Database Components
+      if: ${{ github.event.inputs.delete_database == 'true' || github.event.inputs.delete_all == 'true' }}
+      run: |
+        echo "🗄️❌ Deleting database components..."
+        
+        # Delete database initialization jobs first
+        if [ -f "deployment/database-init.yaml" ]; then
+          kubectl delete -f deployment/database-init.yaml --ignore-not-found=true
+        fi
+        if [ -f "db-init.yaml" ]; then
+          kubectl delete -f db-init.yaml --ignore-not-found=true
+        fi
+        
+        # Delete database deployment and service
+        if [ -f "deployment/database-deployment.yaml" ]; then
+          kubectl delete -f deployment/database-deployment.yaml --ignore-not-found=true
+        fi
+        if [ -f "deployment/db.yaml" ]; then
+          kubectl delete -f deployment/db.yaml --ignore-not-found=true
+        fi
+        
+        # Force delete any remaining database resources
+        kubectl delete deployment,service,pod -l app=database --ignore-not-found=true
+        kubectl delete job -l app=db-init --ignore-not-found=true
+        
+        echo "✅ Database components deleted (PVC preserved)"
+
+    # Delete PVC (DANGEROUS - causes data loss)
+    - name: Delete Persistent Volume Claims (DATA LOSS!)
+      if: ${{ github.event.inputs.delete_pvc == 'true' || github.event.inputs.delete_all == 'true' }}
+      run: |
+        echo "💥❌ DELETING PERSISTENT VOLUME CLAIMS - THIS CAUSES DATA LOSS!"
+        echo "⚠️  Waiting 10 seconds for you to cancel if this was a mistake..."
+        sleep 10
+        
+        if [ -f "deployment/pvc.yaml" ]; then
+          kubectl delete -f deployment/pvc.yaml --ignore-not-found=true
+        fi
+        
+        # Force delete all PVCs
+        kubectl delete pvc --all --ignore-not-found=true
+        
+        echo "💥 PVCs deleted - ALL DATA IS LOST!"
+
+    # Delete Secrets (last, as they might be needed during cleanup)
+    - name: Delete Secrets and Credentials
+      if: ${{ github.event.inputs.delete_secrets == 'true' || github.event.inputs.delete_all == 'true' }}
+      run: |
+        echo "🔐❌ Deleting secrets and credentials..."
+        
+        if [ -f "db-credentials-secret.yaml" ]; then
+          kubectl delete -f db-credentials-secret.yaml --ignore-not-found=true
+        fi
+        if [ -f "deployment/db-credentials-secret.yaml" ]; then
+          kubectl delete -f deployment/db-credentials-secret.yaml --ignore-not-found=true
+        fi
+        
+        # Delete specific secrets (customize as needed)
+        kubectl delete secret db-credentials --ignore-not-found=true
+        
+        echo "✅ Secrets and credentials deleted"
+
+    # Final cleanup
+    - name: Final Cleanup
+      if: ${{ github.event.inputs.delete_all == 'true' }}
+      run: |
+        echo "🧹 Performing final cleanup..."
+        
+        # Delete any remaining resources with your app labels
+        kubectl delete all -l app=frontend --ignore-not-found=true
+        kubectl delete all -l app=backend --ignore-not-found=true
+        kubectl delete all -l app=database --ignore-not-found=true
+        
+        # Delete completed jobs
+        kubectl delete job --field-selector=status.successful=1 --ignore-not-found=true
+        
+        # Delete failed jobs
+        kubectl delete job --field-selector=status.successful=0 --ignore-not-found=true
+        
+        echo "✅ Final cleanup completed"
+
+  # STATUS AND MONITORING JOB (runs for both deploy and delete)
+  status:
+    runs-on: ubuntu-latest
+    needs: [deploy, delete]
+    if: always()
+    
+    steps:
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Install gke-gcloud-auth-plugin
+      run: |
+        gcloud components install gke-gcloud-auth-plugin
+        
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --zone ${{ env.GKE_REGION }}
+    
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Install gke-gcloud-auth-plugin
+      run: |
+        gcloud components install gke-gcloud-auth-plugin
+        
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --zone ${{ env.GKE_REGION }}
+        
+    - name: Verify cluster connection
+      run: |
+        echo "Connected to cluster:"
+        kubectl cluster-info
+        kubectl get nodes
+
+    # Deploy secrets first (if selected or deploy_all is true)
+    - name: Deploy Secrets and Credentials
+      if: ${{ github.event.inputs.deploy_secrets == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🔐 Deploying secrets and credentials..."
+        if [ -f "db-credentials-secret.yaml" ]; then
+          kubectl apply -f db-credentials-secret.yaml
+        fi
+        if [ -f "deployment/db-credentials-secret.yaml" ]; then
+          kubectl apply -f deployment/db-credentials-secret.yaml
+        fi
+        echo "✅ Secrets deployed successfully"
+
+    # Deploy database components (if selected or deploy_all is true)
+    - name: Deploy Database Components
+      if: ${{ github.event.inputs.deploy_database == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🗄️ Deploying database components..."
+        
+        # Deploy PVC first
+        if [ -f "deployment/pvc.yaml" ]; then
+          echo "Deploying PVC..."
+          kubectl apply -f deployment/pvc.yaml
+        fi
+        
+        # Deploy database
+        if [ -f "deployment/db.yaml" ]; then
+          echo "Deploying database service..."
+          kubectl apply -f deployment/db.yaml
+        fi
+        
+        if [ -f "deployment/database-deployment.yaml" ]; then
+          echo "Deploying database deployment..."
+          kubectl apply -f deployment/database-deployment.yaml
+        fi
+        
+        # Wait for database to be ready
+        echo "Waiting for database to be ready..."
+        kubectl wait --for=condition=ready pod -l app=database --timeout=300s || true
+        
+        # Deploy database initialization
+        if [ -f "deployment/database-init.yaml" ]; then
+          echo "Deploying database initialization..."
+          kubectl apply -f deployment/database-init.yaml
+        fi
+        
+        if [ -f "db-init.yaml" ]; then
+          echo "Deploying db-init job..."
+          kubectl apply -f db-init.yaml
+        fi
+        
+        echo "✅ Database components deployed successfully"
+
+    # Deploy support resources (if selected or deploy_all is true)
+    - name: Deploy Support Resources
+      if: ${{ github.event.inputs.deploy_support == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🔧 Deploying support resources..."
+        if [ -f "deployment/support-resources.yaml" ]; then
+          kubectl apply -f deployment/support-resources.yaml
+        fi
+        if [ -f "service.yaml" ]; then
+          kubectl apply -f service.yaml
+        fi
+        echo "✅ Support resources deployed successfully"
+
+    # Deploy backend (if selected or deploy_all is true)
+    - name: Deploy Backend
+      if: ${{ github.event.inputs.deploy_backend == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🔙 Deploying backend application..."
+        if [ -f "deployment/backend.yaml" ]; then
+          kubectl apply -f deployment/backend.yaml
+        fi
+        
+        # Wait for backend to be ready
+        echo "Waiting for backend to be ready..."
+        kubectl wait --for=condition=ready pod -l app=backend --timeout=300s || true
+        
+        echo "✅ Backend deployed successfully"
+
+    # Deploy frontend (if selected or deploy_all is true)
+    - name: Deploy Frontend
+      if: ${{ github.event.inputs.deploy_frontend == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🎨 Deploying frontend application..."
+        if [ -f "deployment/frontend.yaml" ]; then
+          kubectl apply -f deployment/frontend.yaml
+        fi
+        
+        # Wait for frontend to be ready
+        echo "Waiting for frontend to be ready..."
+        kubectl wait --for=condition=ready pod -l app=frontend --timeout=300s || true
+        
+        echo "✅ Frontend deployed successfully"
+
+    # Deploy ingress last (if selected or deploy_all is true)
+    - name: Deploy Ingress
+      if: ${{ github.event.inputs.deploy_ingress == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🌐 Deploying ingress controller..."
+        if [ -f "deployment/ingress.yaml" ]; then
+          kubectl apply -f deployment/ingress.yaml
+        fi
+        if [ -f "ingress.yaml" ]; then
+          kubectl apply -f ingress.yaml
+        fi
+        echo "✅ Ingress deployed successfully"
+
+    # Deploy backup resources (if selected or deploy_all is true)
+    - name: Deploy Backup Resources
+      if: ${{ github.event.inputs.deploy_backup == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "💾 Deploying backup resources..."
+        if [ -f "deployment/finsecure-backup.yaml" ]; then
+          kubectl apply -f deployment/finsecure-backup.yaml
+        fi
+        echo "✅ Backup resources deployed successfully"
+
+    # Show comprehensive deployment status
+    - name: Show Final Status
+      run: |
+        echo "📊 Getting final status after ${{ github.event.inputs.action }}..."
+        echo ""
+        echo "=== NAMESPACES ==="
+        kubectl get namespaces
+        echo ""
+        echo "=== PODS ==="
+        kubectl get pods -o wide || echo "No pods found"
+        echo ""
+        echo "=== SERVICES ==="
+        kubectl get services -o wide || echo "No services found"
+        echo ""
+        echo "=== INGRESS ==="
+        kubectl get ingress -o wide || echo "No ingress found"
+        echo ""
+        echo "=== PERSISTENT VOLUMES ==="
+        kubectl get pv,pvc || echo "No PVs or PVCs found"
+        echo ""
+        echo "=== DEPLOYMENTS ==="
+        kubectl get deployments -o wide || echo "No deployments found"
+        echo ""
+        echo "=== JOBS ==="
+        kubectl get jobs || echo "No jobs found"
+        echo ""
+
+    # Get external access information (only for deployments)
+    - name: Get External Access Information
+      if: ${{ github.event.inputs.action == 'deploy' }}
+      run: |
+        echo "🌍 Getting external access information..."
+        echo ""
+        echo "=== INGRESS DETAILS ==="
+        kubectl describe ingress || echo "No ingress found"
+        echo ""
+        echo "=== EXTERNAL IPs ==="
+        kubectl get services --field-selector spec.type=LoadBalancer -o wide || echo "No LoadBalancer services found"
+        echo ""
+        echo "=== ACCESS INSTRUCTIONS ==="
+        INGRESS_IP=$(kubectl get ingress -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "pending")
+        if [ "$INGRESS_IP" != "pending" ] && [ "$INGRESS_IP" != "" ]; then
+          echo "🎉 Your application is accessible at: http://$INGRESS_IP"
+        else
+          echo "⏳ Ingress IP is still pending. Please wait 5-10 minutes and check:"
+          echo "   kubectl get ingress"
+        fi
+
+    # Deletion summary (only for deletions)
+    - name: Deletion Summary
+      if: ${{ github.event.inputs.action == 'delete' }}
+      run: |
+        echo "🗑️ Deletion Summary:"
+        echo ""
+        if [ "${{ github.event.inputs.delete_all }}" == "true" ]; then
+          echo "💥 FULL DELETION performed - all resources removed"
+        else
+          echo "🎯 Selective deletion performed:"
+          [ "${{ github.event.inputs.delete_ingress }}" == "true" ] && echo "   ✅ Ingress deleted"
+          [ "${{ github.event.inputs.delete_frontend }}" == "true" ] && echo "   ✅ Frontend deleted"
+          [ "${{ github.event.inputs.delete_backend }}" == "true" ] && echo "   ✅ Backend deleted"
+          [ "${{ github.event.inputs.delete_support }}" == "true" ] && echo "   ✅ Support resources deleted"
+          [ "${{ github.event.inputs.delete_database }}" == "true" ] && echo "   ✅ Database deleted"
+          [ "${{ github.event.inputs.delete_pvc }}" == "true" ] && echo "   💥 PVCs deleted (DATA LOST)"
+          [ "${{ github.event.inputs.delete_secrets }}" == "true" ] && echo "   ✅ Secrets deleted"
+          [ "${{ github.event.inputs.delete_backup }}" == "true" ] && echo "   ✅ Backup resources deleted"
+        fi
+        echo ""
+        echo "🔄 To redeploy, run the workflow again with action='deploy'"
+
+    # Health check
+    - name: Health Check
+      if: ${{ github.event.inputs.action == 'deploy' }}
+      run: |
+        echo "🏥 Performing health checks..."
+        echo ""
+        echo "=== POD STATUS ==="
+        kubectl get pods --show-labels || echo "No pods found"
+        echo ""
+        echo "=== PROBLEMATIC PODS ==="
+        kubectl get pods --field-selector=status.phase!=Running,status.phase!=Succeeded || echo "All pods are running or succeeded"
+        echo ""
+        echo "=== RECENT EVENTS ==="
+        kubectl get events --sort-by='.metadata.creationTimestamp' | tail -10
+
+    # Cleanup failed jobs (optional)
+    - name: Cleanup Failed Jobs
+      if: ${{ github.event.inputs.action == 'deploy' }}
+      continue-on-error: true
+      run: |
+        echo "🧹 Cleaning up failed jobs..."
+        kubectl delete jobs --field-selector=status.successful=0 --ignore-not-found=true || echo "No failed jobs to clean up"
