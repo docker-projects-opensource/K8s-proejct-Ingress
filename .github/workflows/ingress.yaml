@@ -102,8 +102,8 @@ jobs:
         echo "🗄️ Deploying database components..."
 
         # Ensure namespace exists
-        namespace.yaml
-
+        # namespace.yaml
+ 
         # Deploy PVC first
         if [ -f "deployment/namespace.yaml" ]; then
           echo "Deploying PVC..."
