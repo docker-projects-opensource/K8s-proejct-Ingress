@@ -1,0 +1,270 @@
+# .github/workflows/deploy.yml
+name: Deploy to GKE
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_secrets:
+        description: 'Deploy secrets and credentials'
+        required: false
+        default: false
+        type: boolean
+      deploy_database:
+        description: 'Deploy database components (PVC, DB deployment, init)'
+        required: false
+        default: false
+        type: boolean
+      deploy_backend:
+        description: 'Deploy backend application'
+        required: false
+        default: false
+        type: boolean
+      deploy_frontend:
+        description: 'Deploy frontend application'
+        required: false
+        default: false
+        type: boolean
+      deploy_ingress:
+        description: 'Deploy ingress controller'
+        required: false
+        default: false
+        type: boolean
+      deploy_support:
+        description: 'Deploy support resources'
+        required: false
+        default: false
+        type: boolean
+      deploy_backup:
+        description: 'Deploy backup resources'
+        required: false
+        default: false
+        type: boolean
+      deploy_all:
+        description: 'Deploy all components (overrides individual selections)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  PROJECT_ID: turnkey-guild-441104-f3
+  GKE_CLUSTER: dev-devops-gke
+  GKE_REGION: us-central1
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+        
+    - name: Install gke-gcloud-auth-plugin
+      run: |
+        gcloud components install gke-gcloud-auth-plugin
+        
+    - name: Get GKE credentials
+      run: |
+        gcloud container clusters get-credentials ${{ env.GKE_CLUSTER }} --zone ${{ env.GKE_REGION }}
+        
+    - name: Verify cluster connection
+      run: |
+        echo "Connected to cluster:"
+        kubectl cluster-info
+        kubectl get nodes
+
+    # Deploy secrets first (if selected or deploy_all is true)
+    - name: Deploy Secrets and Credentials
+      if: ${{ github.event.inputs.deploy_secrets == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🔐 Deploying secrets and credentials..."
+        if [ -f "db-credentials-secret.yaml" ]; then
+          kubectl apply -f db-credentials-secret.yaml
+        fi
+        if [ -f "deployment/db-credentials-secret.yaml" ]; then
+          kubectl apply -f deployment/db-credentials-secret.yaml
+        fi
+        echo "✅ Secrets deployed successfully"
+
+    # Deploy database components (if selected or deploy_all is true)
+    - name: Deploy Database Components
+      if: ${{ github.event.inputs.deploy_database == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🗄️ Deploying database components..."
+        
+        # Deploy PVC first
+        if [ -f "deployment/pvc.yaml" ]; then
+          echo "Deploying PVC..."
+          kubectl apply -f deployment/pvc.yaml
+        fi
+        
+        # Deploy database
+        if [ -f "deployment/db.yaml" ]; then
+          echo "Deploying database service..."
+          kubectl apply -f deployment/db.yaml
+        fi
+        
+        if [ -f "deployment/database-deployment.yaml" ]; then
+          echo "Deploying database deployment..."
+          kubectl apply -f deployment/database-deployment.yaml
+        fi
+        
+        # Wait for database to be ready
+        echo "Waiting for database to be ready..."
+        kubectl wait --for=condition=ready pod -l app=database --timeout=300s || true
+        
+        # Deploy database initialization
+        if [ -f "deployment/database-init.yaml" ]; then
+          echo "Deploying database initialization..."
+          kubectl apply -f deployment/database-init.yaml
+        fi
+        
+        if [ -f "db-init.yaml" ]; then
+          echo "Deploying db-init job..."
+          kubectl apply -f db-init.yaml
+        fi
+        
+        echo "✅ Database components deployed successfully"
+
+    # Deploy support resources (if selected or deploy_all is true)
+    - name: Deploy Support Resources
+      if: ${{ github.event.inputs.deploy_support == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🔧 Deploying support resources..."
+        if [ -f "deployment/support-resources.yaml" ]; then
+          kubectl apply -f deployment/support-resources.yaml
+        fi
+        if [ -f "service.yaml" ]; then
+          kubectl apply -f service.yaml
+        fi
+        echo "✅ Support resources deployed successfully"
+
+    # Deploy backend (if selected or deploy_all is true)
+    - name: Deploy Backend
+      if: ${{ github.event.inputs.deploy_backend == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🔙 Deploying backend application..."
+        if [ -f "deployment/backend.yaml" ]; then
+          kubectl apply -f deployment/backend.yaml
+        fi
+        
+        # Wait for backend to be ready
+        echo "Waiting for backend to be ready..."
+        kubectl wait --for=condition=ready pod -l app=backend --timeout=300s || true
+        
+        echo "✅ Backend deployed successfully"
+
+    # Deploy frontend (if selected or deploy_all is true)
+    - name: Deploy Frontend
+      if: ${{ github.event.inputs.deploy_frontend == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🎨 Deploying frontend application..."
+        if [ -f "deployment/frontend.yaml" ]; then
+          kubectl apply -f deployment/frontend.yaml
+        fi
+        
+        # Wait for frontend to be ready
+        echo "Waiting for frontend to be ready..."
+        kubectl wait --for=condition=ready pod -l app=frontend --timeout=300s || true
+        
+        echo "✅ Frontend deployed successfully"
+
+    # Deploy ingress last (if selected or deploy_all is true)
+    - name: Deploy Ingress
+      if: ${{ github.event.inputs.deploy_ingress == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "🌐 Deploying ingress controller..."
+        if [ -f "deployment/ingress.yaml" ]; then
+          kubectl apply -f deployment/ingress.yaml
+        fi
+        if [ -f "ingress.yaml" ]; then
+          kubectl apply -f ingress.yaml
+        fi
+        echo "✅ Ingress deployed successfully"
+
+    # Deploy backup resources (if selected or deploy_all is true)
+    - name: Deploy Backup Resources
+      if: ${{ github.event.inputs.deploy_backup == 'true' || github.event.inputs.deploy_all == 'true' }}
+      run: |
+        echo "💾 Deploying backup resources..."
+        if [ -f "deployment/finsecure-backup.yaml" ]; then
+          kubectl apply -f deployment/finsecure-backup.yaml
+        fi
+        echo "✅ Backup resources deployed successfully"
+
+    # Show comprehensive deployment status
+    - name: Show Deployment Status
+      run: |
+        echo "📊 Getting comprehensive deployment status..."
+        echo ""
+        echo "=== NAMESPACES ==="
+        kubectl get namespaces
+        echo ""
+        echo "=== PODS ==="
+        kubectl get pods -o wide
+        echo ""
+        echo "=== SERVICES ==="
+        kubectl get services -o wide
+        echo ""
+        echo "=== INGRESS ==="
+        kubectl get ingress -o wide
+        echo ""
+        echo "=== PERSISTENT VOLUMES ==="
+        kubectl get pv,pvc
+        echo ""
+        echo "=== DEPLOYMENTS ==="
+        kubectl get deployments -o wide
+        echo ""
+        echo "=== JOBS ==="
+        kubectl get jobs
+        echo ""
+
+    # Get external access information
+    - name: Get External Access Information
+      run: |
+        echo "🌍 Getting external access information..."
+        echo ""
+        echo "=== INGRESS DETAILS ==="
+        kubectl describe ingress || echo "No ingress found"
+        echo ""
+        echo "=== EXTERNAL IPs ==="
+        kubectl get services --field-selector spec.type=LoadBalancer -o wide || echo "No LoadBalancer services found"
+        echo ""
+        echo "=== ACCESS INSTRUCTIONS ==="
+        INGRESS_IP=$(kubectl get ingress -o jsonpath='{.items[0].status.loadBalancer.ingress[0].ip}' 2>/dev/null || echo "pending")
+        if [ "$INGRESS_IP" != "pending" ] && [ "$INGRESS_IP" != "" ]; then
+          echo "🎉 Your application is accessible at: http://$INGRESS_IP"
+        else
+          echo "⏳ Ingress IP is still pending. Please wait 5-10 minutes and check:"
+          echo "   kubectl get ingress"
+        fi
+
+    # Health check
+    - name: Health Check
+      run: |
+        echo "🏥 Performing health checks..."
+        echo ""
+        echo "=== POD STATUS ==="
+        kubectl get pods --show-labels
+        echo ""
+        echo "=== PROBLEMATIC PODS ==="
+        kubectl get pods --field-selector=status.phase!=Running,status.phase!=Succeeded || echo "All pods are running or succeeded"
+        echo ""
+        echo "=== RECENT EVENTS ==="
+        kubectl get events --sort-by='.metadata.creationTimestamp' | tail -10
+
+    # Cleanup failed jobs (optional)
+    - name: Cleanup Failed Jobs
+      continue-on-error: true
+      run: |
+        echo "🧹 Cleaning up failed jobs..."
+        kubectl delete jobs --field-selector=status.successful=0 || echo "No failed jobs to clean up"
