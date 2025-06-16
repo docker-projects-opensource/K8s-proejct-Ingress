@@ -100,6 +100,15 @@ jobs:
       if: ${{ github.event.inputs.deploy_database == 'true' || github.event.inputs.deploy_all == 'true' }}
       run: |
         echo "🗄️ Deploying database components..."
+
+        # Ensure namespace exists
+        namespace.yaml
+
+        # Deploy PVC first
+        if [ -f "deployment/namespace.yaml" ]; then
+          echo "Deploying PVC..."
+          kubectl apply -f deployment/namespace.yaml
+        fi
         
         # Deploy PVC first
         if [ -f "deployment/pvc.yaml" ]; then
