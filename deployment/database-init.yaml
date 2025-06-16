@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-init-script-v2
+  namespace: finsecure-banking
+data:
+  init.sql: |
+    -- Create the messages table (database already exists due to POSTGRES_DB=messages)
+    CREATE TABLE IF NOT EXISTS messages (
+        id SERIAL PRIMARY KEY,
+        author VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+    
+    -- Insert welcome message if table is empty
+    INSERT INTO messages (author, content) 
+    SELECT 'System', 'Welcome to FinSecure Message Board! 🚀' 
+    WHERE NOT EXISTS (SELECT 1 FROM messages);
+    
+    -- Display success message
+    SELECT 'Table initialization completed successfully!' as status;
+    SELECT COUNT(*) as total_messages FROM messages;
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-table-init-job
+  namespace: finsecure-banking
+spec:
+  template:
+    spec:
+      containers:
+      - name: db-init
+        image: postgres:13-alpine
+        command: 
+        - /bin/bash
+        - -c
+        - |
+          echo "Starting table initialization..."
+          
+          # Wait for database to be ready
+          until pg_isready -h database-service -p 5432 -U postgres; do
+            echo "Waiting for database to be ready..."
+            sleep 2
+          done
+          echo "✅ Database is ready!"
+          
+          # Check if messages database exists (it should due to POSTGRES_DB=messages)
+          echo "Checking available databases..."
+          psql -h database-service -U postgres -d messages -c "\l"
+          
+          # Create table in messages database (database already exists)
+          echo "Creating table in messages database..."
+          psql -h database-service -U postgres -d messages -f /docker-entrypoint-initdb.d/init.sql
+          
+          echo "✅ Table initialization completed!"
+          
+          # Verify the setup
+          echo "Verifying table structure..."
+          psql -h database-service -U postgres -d messages -c "\dt"
+          echo "Current messages:"
+          psql -h database-service -U postgres -d messages -c "SELECT * FROM messages;"
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
+        volumeMounts:
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: init-script
+        configMap:
+          name: db-init-script-v2
+      restartPolicy: OnFailure
+  backoffLimit: 3

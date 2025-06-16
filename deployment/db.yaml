@@ -1,0 +1,53 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: db-init-job-fixed
+  namespace: finsecure-banking
+spec:
+  template:
+    spec:
+      containers:
+      - name: db-init
+        image: postgres:13-alpine
+        command: 
+        - /bin/bash
+        - -c
+        - |
+          echo "Starting database initialization..."
+          
+          # Wait for database to be ready
+          until pg_isready -h database-service -p 5432 -U postgres; do
+            echo "Waiting for database to be ready..."
+            sleep 2
+          done
+          echo "✅ Database is ready!"
+          
+          # First, create the database (connect to default 'postgres' database)
+          echo "Creating 'messages' database..."
+          psql -h database-service -U postgres -d postgres -c "CREATE DATABASE messages;" || echo "Database 'messages' already exists or creation failed, continuing..."
+          
+          # Then create the table and insert data (connect to 'messages' database)
+          echo "Creating table and inserting initial data..."
+          psql -h database-service -U postgres -d messages -f /docker-entrypoint-initdb.d/init.sql
+          
+          echo "✅ Database initialization completed!"
+          
+          # Verify the setup
+          echo "Verifying setup..."
+          psql -h database-service -U postgres -d messages -c "SELECT COUNT(*) as message_count FROM messages;"
+        env:
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: password
+        volumeMounts:
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d
+      volumes:
+      - name: init-script
+        configMap:
+          name: db-init-script
+      restartPolicy: OnFailure
+  backoffLimit: 3

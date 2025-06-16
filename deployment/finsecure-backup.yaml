@@ -1,0 +1,1667 @@
+apiVersion: v1
+items:
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-06-16T02:14:59Z"
+    generateName: backend-deployment-866bbf9947-
+    labels:
+      app: backend
+      pod-template-hash: 866bbf9947
+    name: backend-deployment-866bbf9947-nprj5
+    namespace: finsecure-banking
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: backend-deployment-866bbf9947
+      uid: 1312d5f6-1ff0-40bc-a5ef-56cae1946b30
+    resourceVersion: "7735"
+    uid: c277575a-5800-4abd-a926-ad3b7f14eaf1
+  spec:
+    containers:
+    - env:
+      - name: NODE_ENV
+        value: production
+      - name: PORT
+        value: "3000"
+      - name: DB_HOST
+        value: database-service
+      - name: DB_PORT
+        value: "5432"
+      - name: DB_USER
+        valueFrom:
+          secretKeyRef:
+            key: username
+            name: db-credentials
+      - name: DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: password
+            name: db-credentials
+      - name: DB_NAME
+        value: messages
+      image: arunponugotii/backend:latestmvp
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /health
+          port: 3000
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: backend
+      ports:
+      - containerPort: 3000
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /health
+          port: 3000
+          scheme: HTTP
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /app/logs
+        name: backend-logs
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-sn29f
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: k3d-finsecure-server-0
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: backend-logs
+      persistentVolumeClaim:
+        claimName: backend-logs-pvc
+    - name: kube-api-access-sn29f
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:22Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:03Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:28Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:28Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:03Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://03fc0ff26b1f140348f7e9074cc83732e7ef6ae4e9a8e535f3f22fa238381860
+      image: docker.io/arunponugotii/backend:latestmvp
+      imageID: docker.io/arunponugotii/backend@sha256:668477e72cf2f2e6702726acb5f9400751745166a08905dda2b901b690edabc6
+      lastState: {}
+      name: backend
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-06-16T02:15:22Z"
+      volumeMounts:
+      - mountPath: /app/logs
+        name: backend-logs
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-sn29f
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.20.0.3
+    hostIPs:
+    - ip: 172.20.0.3
+    phase: Running
+    podIP: 10.42.2.19
+    podIPs:
+    - ip: 10.42.2.19
+    qosClass: Burstable
+    startTime: "2025-06-16T02:15:03Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-06-16T02:14:59Z"
+    generateName: backend-deployment-866bbf9947-
+    labels:
+      app: backend
+      pod-template-hash: 866bbf9947
+    name: backend-deployment-866bbf9947-w8bhf
+    namespace: finsecure-banking
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: backend-deployment-866bbf9947
+      uid: 1312d5f6-1ff0-40bc-a5ef-56cae1946b30
+    resourceVersion: "7730"
+    uid: 2c90a663-d2d8-42a0-a18b-aee2a93634e1
+  spec:
+    containers:
+    - env:
+      - name: NODE_ENV
+        value: production
+      - name: PORT
+        value: "3000"
+      - name: DB_HOST
+        value: database-service
+      - name: DB_PORT
+        value: "5432"
+      - name: DB_USER
+        valueFrom:
+          secretKeyRef:
+            key: username
+            name: db-credentials
+      - name: DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: password
+            name: db-credentials
+      - name: DB_NAME
+        value: messages
+      image: arunponugotii/backend:latestmvp
+      imagePullPolicy: IfNotPresent
+      livenessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /health
+          port: 3000
+          scheme: HTTP
+        initialDelaySeconds: 30
+        periodSeconds: 10
+        successThreshold: 1
+        timeoutSeconds: 1
+      name: backend
+      ports:
+      - containerPort: 3000
+        protocol: TCP
+      readinessProbe:
+        failureThreshold: 3
+        httpGet:
+          path: /health
+          port: 3000
+          scheme: HTTP
+        initialDelaySeconds: 5
+        periodSeconds: 5
+        successThreshold: 1
+        timeoutSeconds: 1
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /app/logs
+        name: backend-logs
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-2dcpt
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: k3d-finsecure-server-0
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: backend-logs
+      persistentVolumeClaim:
+        claimName: backend-logs-pvc
+    - name: kube-api-access-2dcpt
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:22Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:03Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:28Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:28Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:03Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://ff4c43abde1c58ba3bdd3792e0edff9726bde70e8cd3e7c08553bda05844fc6c
+      image: docker.io/arunponugotii/backend:latestmvp
+      imageID: docker.io/arunponugotii/backend@sha256:668477e72cf2f2e6702726acb5f9400751745166a08905dda2b901b690edabc6
+      lastState: {}
+      name: backend
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-06-16T02:15:22Z"
+      volumeMounts:
+      - mountPath: /app/logs
+        name: backend-logs
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-2dcpt
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.20.0.3
+    hostIPs:
+    - ip: 172.20.0.3
+    phase: Running
+    podIP: 10.42.2.18
+    podIPs:
+    - ip: 10.42.2.18
+    qosClass: Burstable
+    startTime: "2025-06-16T02:15:03Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-06-16T02:14:50Z"
+    generateName: database-deployment-775f9cdfc5-
+    labels:
+      app: database
+      pod-template-hash: 775f9cdfc5
+    name: database-deployment-775f9cdfc5-6qb8n
+    namespace: finsecure-banking
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: database-deployment-775f9cdfc5
+      uid: 7588aea9-937a-4428-ab8a-d87056f49f5e
+    resourceVersion: "7627"
+    uid: ff2bd8eb-93bd-4966-b3f9-6dbd4f193e26
+  spec:
+    containers:
+    - env:
+      - name: POSTGRES_USER
+        valueFrom:
+          secretKeyRef:
+            key: username
+            name: db-credentials
+      - name: POSTGRES_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: password
+            name: db-credentials
+      - name: POSTGRES_DB
+        value: messages
+      image: postgres:13-alpine
+      imagePullPolicy: IfNotPresent
+      name: postgres
+      ports:
+      - containerPort: 5432
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 100m
+          memory: 256Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/lib/postgresql/data
+        name: postgres-data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-sndm5
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: k3d-finsecure-agent-0
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: postgres-data
+      persistentVolumeClaim:
+        claimName: postgres-data-pvc
+    - name: kube-api-access-sndm5
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:01Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:00Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:01Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:01Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:00Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://5c8f8bc9b980d273428103d719bcae917170ab588d85f59924900448e487c40a
+      image: docker.io/library/postgres:13-alpine
+      imageID: docker.io/library/postgres@sha256:75ff34a9e6341b3fbfa7aba26c4daaacb94a5529c55a24a21ee3480eb0957cb2
+      lastState: {}
+      name: postgres
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-06-16T02:15:01Z"
+      volumeMounts:
+      - mountPath: /var/lib/postgresql/data
+        name: postgres-data
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-sndm5
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.20.0.5
+    hostIPs:
+    - ip: 172.20.0.5
+    phase: Running
+    podIP: 10.42.0.19
+    podIPs:
+    - ip: 10.42.0.19
+    qosClass: Burstable
+    startTime: "2025-06-16T02:15:00Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-06-16T02:15:17Z"
+    generateName: db-table-init-job-
+    labels:
+      batch.kubernetes.io/controller-uid: 7073d978-215a-43d9-8628-dd18bae4bba7
+      batch.kubernetes.io/job-name: db-table-init-job
+      controller-uid: 7073d978-215a-43d9-8628-dd18bae4bba7
+      job-name: db-table-init-job
+    name: db-table-init-job-6bzkj
+    namespace: finsecure-banking
+    ownerReferences:
+    - apiVersion: batch/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Job
+      name: db-table-init-job
+      uid: 7073d978-215a-43d9-8628-dd18bae4bba7
+    resourceVersion: "7768"
+    uid: 8aa7f1fd-d9fd-470e-af26-6b11d9ac1949
+  spec:
+    containers:
+    - command:
+      - /bin/bash
+      - -c
+      - |
+        echo "Starting table initialization..."
+
+        # Wait for database to be ready
+        until pg_isready -h database-service -p 5432 -U postgres; do
+          echo "Waiting for database to be ready..."
+          sleep 2
+        done
+        echo "Ô£à Database is ready!"
+
+        # Check if messages database exists (it should due to POSTGRES_DB=messages)
+        echo "Checking available databases..."
+        psql -h database-service -U postgres -d messages -c "\l"
+
+        # Create table in messages database (database already exists)
+        echo "Creating table in messages database..."
+        psql -h database-service -U postgres -d messages -f /docker-entrypoint-initdb.d/init.sql
+
+        echo "Ô£à Table initialization completed!"
+
+        # Verify the setup
+        echo "Verifying table structure..."
+        psql -h database-service -U postgres -d messages -c "\dt"
+        echo "Current messages:"
+        psql -h database-service -U postgres -d messages -c "SELECT * FROM messages;"
+      env:
+      - name: PGPASSWORD
+        valueFrom:
+          secretKeyRef:
+            key: password
+            name: db-credentials
+      image: postgres:13-alpine
+      imagePullPolicy: IfNotPresent
+      name: db-init
+      resources: {}
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /docker-entrypoint-initdb.d
+        name: init-script
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-qjf4f
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: k3d-finsecure-agent-1
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: OnFailure
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - configMap:
+        defaultMode: 420
+        name: db-init-script-v2
+      name: init-script
+    - name: kube-api-access-qjf4f
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T03:05:18Z"
+      status: "False"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:17Z"
+      reason: PodCompleted
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T03:05:17Z"
+      reason: PodCompleted
+      status: "False"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T03:05:17Z"
+      reason: PodCompleted
+      status: "False"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:17Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://7442c1b8e9431c6d66a52823f816ac0b2986f81ba673c981badcb3ef1319106b
+      image: docker.io/library/postgres:13-alpine
+      imageID: docker.io/library/postgres@sha256:75ff34a9e6341b3fbfa7aba26c4daaacb94a5529c55a24a21ee3480eb0957cb2
+      lastState: {}
+      name: db-init
+      ready: false
+      restartCount: 0
+      started: false
+      state:
+        terminated:
+          containerID: containerd://7442c1b8e9431c6d66a52823f816ac0b2986f81ba673c981badcb3ef1319106b
+          exitCode: 0
+          finishedAt: "2025-06-16T03:05:16Z"
+          reason: Completed
+          startedAt: "2025-06-16T03:05:16Z"
+      volumeMounts:
+      - mountPath: /docker-entrypoint-initdb.d
+        name: init-script
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-qjf4f
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.20.0.4
+    hostIPs:
+    - ip: 172.20.0.4
+    phase: Succeeded
+    podIP: 10.42.1.18
+    podIPs:
+    - ip: 10.42.1.18
+    qosClass: BestEffort
+    startTime: "2025-06-16T02:15:17Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-06-16T02:15:04Z"
+    generateName: frontend-deployment-6868fb4589-
+    labels:
+      app: frontend
+      pod-template-hash: 6868fb4589
+    name: frontend-deployment-6868fb4589-2jwjl
+    namespace: finsecure-banking
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: frontend-deployment-6868fb4589
+      uid: d8ca4fab-6485-4ca7-933f-f6243f47a081
+    resourceVersion: "7678"
+    uid: 76b93749-f54b-41eb-bfbc-f02ef9b7b58a
+  spec:
+    containers:
+    - image: arunponugotii/frontend-ingress:latest
+      imagePullPolicy: Always
+      name: frontend
+      ports:
+      - containerPort: 80
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-hfkbw
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: k3d-finsecure-agent-0
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-hfkbw
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:07Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:04Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:07Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:07Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:04Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://0095e4449cc7da0a2607d58eedf802c4d99e4d07c4224eaca03854558ed16e23
+      image: docker.io/arunponugotii/frontend-ingress:latest
+      imageID: docker.io/arunponugotii/frontend-ingress@sha256:27626c9ed907c124d59c98c6371dd0c3591a440961acf425a8fe749045f4a292
+      lastState: {}
+      name: frontend
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-06-16T02:15:07Z"
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-hfkbw
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.20.0.5
+    hostIPs:
+    - ip: 172.20.0.5
+    phase: Running
+    podIP: 10.42.0.20
+    podIPs:
+    - ip: 10.42.0.20
+    qosClass: Burstable
+    startTime: "2025-06-16T02:15:04Z"
+- apiVersion: v1
+  kind: Pod
+  metadata:
+    creationTimestamp: "2025-06-16T02:15:04Z"
+    generateName: frontend-deployment-6868fb4589-
+    labels:
+      app: frontend
+      pod-template-hash: 6868fb4589
+    name: frontend-deployment-6868fb4589-sqvd2
+    namespace: finsecure-banking
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: ReplicaSet
+      name: frontend-deployment-6868fb4589
+      uid: d8ca4fab-6485-4ca7-933f-f6243f47a081
+    resourceVersion: "7705"
+    uid: feed250e-a4b0-486f-a000-bd8403bae3d1
+  spec:
+    containers:
+    - image: arunponugotii/frontend-ingress:latest
+      imagePullPolicy: Always
+      name: frontend
+      ports:
+      - containerPort: 80
+        protocol: TCP
+      resources:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 64Mi
+      terminationMessagePath: /dev/termination-log
+      terminationMessagePolicy: File
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-vnxd5
+        readOnly: true
+    dnsPolicy: ClusterFirst
+    enableServiceLinks: true
+    nodeName: k3d-finsecure-agent-1
+    preemptionPolicy: PreemptLowerPriority
+    priority: 0
+    restartPolicy: Always
+    schedulerName: default-scheduler
+    securityContext: {}
+    serviceAccount: default
+    serviceAccountName: default
+    terminationGracePeriodSeconds: 30
+    tolerations:
+    - effect: NoExecute
+      key: node.kubernetes.io/not-ready
+      operator: Exists
+      tolerationSeconds: 300
+    - effect: NoExecute
+      key: node.kubernetes.io/unreachable
+      operator: Exists
+      tolerationSeconds: 300
+    volumes:
+    - name: kube-api-access-vnxd5
+      projected:
+        defaultMode: 420
+        sources:
+        - serviceAccountToken:
+            expirationSeconds: 3607
+            path: token
+        - configMap:
+            items:
+            - key: ca.crt
+              path: ca.crt
+            name: kube-root-ca.crt
+        - downwardAPI:
+            items:
+            - fieldRef:
+                apiVersion: v1
+                fieldPath: metadata.namespace
+              path: namespace
+  status:
+    conditions:
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:18Z"
+      status: "True"
+      type: PodReadyToStartContainers
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:04Z"
+      status: "True"
+      type: Initialized
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:18Z"
+      status: "True"
+      type: Ready
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:18Z"
+      status: "True"
+      type: ContainersReady
+    - lastProbeTime: null
+      lastTransitionTime: "2025-06-16T02:15:04Z"
+      status: "True"
+      type: PodScheduled
+    containerStatuses:
+    - containerID: containerd://b2f3b6256f8c3ad25436c5655b4cb33b951c7b9f897fd6d7a167c0167ffec1be
+      image: docker.io/arunponugotii/frontend-ingress:latest
+      imageID: docker.io/arunponugotii/frontend-ingress@sha256:27626c9ed907c124d59c98c6371dd0c3591a440961acf425a8fe749045f4a292
+      lastState: {}
+      name: frontend
+      ready: true
+      restartCount: 0
+      started: true
+      state:
+        running:
+          startedAt: "2025-06-16T02:15:17Z"
+      volumeMounts:
+      - mountPath: /var/run/secrets/kubernetes.io/serviceaccount
+        name: kube-api-access-vnxd5
+        readOnly: true
+        recursiveReadOnly: Disabled
+    hostIP: 172.20.0.4
+    hostIPs:
+    - ip: 172.20.0.4
+    phase: Running
+    podIP: 10.42.1.17
+    podIPs:
+    - ip: 10.42.1.17
+    qosClass: Burstable
+    startTime: "2025-06-16T02:15:04Z"
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"backend-service","namespace":"finsecure-banking"},"spec":{"ports":[{"port":3000,"protocol":"TCP","targetPort":3000}],"selector":{"app":"backend"},"type":"ClusterIP"}}
+    creationTimestamp: "2025-06-16T02:14:59Z"
+    name: backend-service
+    namespace: finsecure-banking
+    resourceVersion: "7592"
+    uid: b200373d-45ca-4c97-b8ce-1371c652e9fc
+  spec:
+    clusterIP: 10.43.41.150
+    clusterIPs:
+    - 10.43.41.150
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 3000
+      protocol: TCP
+      targetPort: 3000
+    selector:
+      app: backend
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"database-service","namespace":"finsecure-banking"},"spec":{"ports":[{"port":5432,"protocol":"TCP","targetPort":5432}],"selector":{"app":"database"},"type":"ClusterIP"}}
+    creationTimestamp: "2025-06-16T02:14:50Z"
+    name: database-service
+    namespace: finsecure-banking
+    resourceVersion: "7552"
+    uid: 38211961-5540-4e1c-bc67-917d3fbaef03
+  spec:
+    clusterIP: 10.43.16.254
+    clusterIPs:
+    - 10.43.16.254
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 5432
+      protocol: TCP
+      targetPort: 5432
+    selector:
+      app: database
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"name":"frontend-service","namespace":"finsecure-banking"},"spec":{"ports":[{"port":80,"protocol":"TCP","targetPort":80}],"selector":{"app":"frontend"},"type":"ClusterIP"}}
+    creationTimestamp: "2025-06-16T02:15:04Z"
+    name: frontend-service
+    namespace: finsecure-banking
+    resourceVersion: "7661"
+    uid: 52c061f5-84b5-4723-bce6-4cf682483f7a
+  spec:
+    clusterIP: 10.43.50.239
+    clusterIPs:
+    - 10.43.50.239
+    internalTrafficPolicy: Cluster
+    ipFamilies:
+    - IPv4
+    ipFamilyPolicy: SingleStack
+    ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 80
+    selector:
+      app: frontend
+    sessionAffinity: None
+    type: ClusterIP
+  status:
+    loadBalancer: {}
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"backend"},"name":"backend-deployment","namespace":"finsecure-banking"},"spec":{"replicas":2,"selector":{"matchLabels":{"app":"backend"}},"template":{"metadata":{"labels":{"app":"backend"}},"spec":{"containers":[{"env":[{"name":"NODE_ENV","value":"production"},{"name":"PORT","value":"3000"},{"name":"DB_HOST","value":"database-service"},{"name":"DB_PORT","value":"5432"},{"name":"DB_USER","valueFrom":{"secretKeyRef":{"key":"username","name":"db-credentials"}}},{"name":"DB_PASSWORD","valueFrom":{"secretKeyRef":{"key":"password","name":"db-credentials"}}},{"name":"DB_NAME","value":"messages"}],"image":"arunponugotii/backend:latestmvp","livenessProbe":{"httpGet":{"path":"/health","port":3000},"initialDelaySeconds":30,"periodSeconds":10},"name":"backend","ports":[{"containerPort":3000}],"readinessProbe":{"httpGet":{"path":"/health","port":3000},"initialDelaySeconds":5,"periodSeconds":5},"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"256Mi"}},"volumeMounts":[{"mountPath":"/app/logs","name":"backend-logs"}]}],"volumes":[{"name":"backend-logs","persistentVolumeClaim":{"claimName":"backend-logs-pvc"}}]}}}}
+    creationTimestamp: "2025-06-16T02:14:59Z"
+    generation: 1
+    labels:
+      app: backend
+    name: backend-deployment
+    namespace: finsecure-banking
+    resourceVersion: "7739"
+    uid: 2544d8b1-4942-400d-a2de-01f9cc5de694
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 2
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: backend
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: backend
+      spec:
+        containers:
+        - env:
+          - name: NODE_ENV
+            value: production
+          - name: PORT
+            value: "3000"
+          - name: DB_HOST
+            value: database-service
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: db-credentials
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: db-credentials
+          - name: DB_NAME
+            value: messages
+          image: arunponugotii/backend:latestmvp
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: backend
+          ports:
+          - containerPort: 3000
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /app/logs
+            name: backend-logs
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: backend-logs
+          persistentVolumeClaim:
+            claimName: backend-logs-pvc
+  status:
+    availableReplicas: 2
+    conditions:
+    - lastTransitionTime: "2025-06-16T02:15:28Z"
+      lastUpdateTime: "2025-06-16T02:15:28Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2025-06-16T02:14:59Z"
+      lastUpdateTime: "2025-06-16T02:15:28Z"
+      message: ReplicaSet "backend-deployment-866bbf9947" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 2
+    replicas: 2
+    updatedReplicas: 2
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"database"},"name":"database-deployment","namespace":"finsecure-banking"},"spec":{"replicas":1,"selector":{"matchLabels":{"app":"database"}},"template":{"metadata":{"labels":{"app":"database"}},"spec":{"containers":[{"env":[{"name":"POSTGRES_USER","valueFrom":{"secretKeyRef":{"key":"username","name":"db-credentials"}}},{"name":"POSTGRES_PASSWORD","valueFrom":{"secretKeyRef":{"key":"password","name":"db-credentials"}}},{"name":"POSTGRES_DB","value":"messages"}],"image":"postgres:13-alpine","name":"postgres","ports":[{"containerPort":5432}],"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"256Mi"}},"volumeMounts":[{"mountPath":"/var/lib/postgresql/data","name":"postgres-data"}]}],"volumes":[{"name":"postgres-data","persistentVolumeClaim":{"claimName":"postgres-data-pvc"}}]}}}}
+    creationTimestamp: "2025-06-16T02:14:50Z"
+    generation: 1
+    labels:
+      app: database
+    name: database-deployment
+    namespace: finsecure-banking
+    resourceVersion: "7631"
+    uid: ed05064e-6293-402d-aef7-0d0b295bf8bc
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: database
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: database
+      spec:
+        containers:
+        - env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: db-credentials
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: db-credentials
+          - name: POSTGRES_DB
+            value: messages
+          image: postgres:13-alpine
+          imagePullPolicy: IfNotPresent
+          name: postgres
+          ports:
+          - containerPort: 5432
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /var/lib/postgresql/data
+            name: postgres-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data-pvc
+  status:
+    availableReplicas: 1
+    conditions:
+    - lastTransitionTime: "2025-06-16T02:15:01Z"
+      lastUpdateTime: "2025-06-16T02:15:01Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2025-06-16T02:14:50Z"
+      lastUpdateTime: "2025-06-16T02:15:01Z"
+      message: ReplicaSet "database-deployment-775f9cdfc5" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+    updatedReplicas: 1
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    annotations:
+      deployment.kubernetes.io/revision: "1"
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"apps/v1","kind":"Deployment","metadata":{"annotations":{},"labels":{"app":"frontend"},"name":"frontend-deployment","namespace":"finsecure-banking"},"spec":{"replicas":2,"selector":{"matchLabels":{"app":"frontend"}},"template":{"metadata":{"labels":{"app":"frontend"}},"spec":{"containers":[{"image":"arunponugotii/frontend-ingress:latest","imagePullPolicy":"Always","name":"frontend","ports":[{"containerPort":80}],"resources":{"limits":{"cpu":"100m","memory":"128Mi"},"requests":{"cpu":"50m","memory":"64Mi"}}}]}}}}
+    creationTimestamp: "2025-06-16T02:15:04Z"
+    generation: 1
+    labels:
+      app: frontend
+    name: frontend-deployment
+    namespace: finsecure-banking
+    resourceVersion: "7709"
+    uid: 4deeb1ea-44b1-48c8-ae49-d6831058828d
+  spec:
+    progressDeadlineSeconds: 600
+    replicas: 2
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: frontend
+    strategy:
+      rollingUpdate:
+        maxSurge: 25%
+        maxUnavailable: 25%
+      type: RollingUpdate
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: frontend
+      spec:
+        containers:
+        - image: arunponugotii/frontend-ingress:latest
+          imagePullPolicy: Always
+          name: frontend
+          ports:
+          - containerPort: 80
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 2
+    conditions:
+    - lastTransitionTime: "2025-06-16T02:15:18Z"
+      lastUpdateTime: "2025-06-16T02:15:18Z"
+      message: Deployment has minimum availability.
+      reason: MinimumReplicasAvailable
+      status: "True"
+      type: Available
+    - lastTransitionTime: "2025-06-16T02:15:04Z"
+      lastUpdateTime: "2025-06-16T02:15:18Z"
+      message: ReplicaSet "frontend-deployment-6868fb4589" has successfully progressed.
+      reason: NewReplicaSetAvailable
+      status: "True"
+      type: Progressing
+    observedGeneration: 1
+    readyReplicas: 2
+    replicas: 2
+    updatedReplicas: 2
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "2"
+      deployment.kubernetes.io/max-replicas: "3"
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2025-06-16T02:14:59Z"
+    generation: 1
+    labels:
+      app: backend
+      pod-template-hash: 866bbf9947
+    name: backend-deployment-866bbf9947
+    namespace: finsecure-banking
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: backend-deployment
+      uid: 2544d8b1-4942-400d-a2de-01f9cc5de694
+    resourceVersion: "7738"
+    uid: 1312d5f6-1ff0-40bc-a5ef-56cae1946b30
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
+        app: backend
+        pod-template-hash: 866bbf9947
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: backend
+          pod-template-hash: 866bbf9947
+      spec:
+        containers:
+        - env:
+          - name: NODE_ENV
+            value: production
+          - name: PORT
+            value: "3000"
+          - name: DB_HOST
+            value: database-service
+          - name: DB_PORT
+            value: "5432"
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: db-credentials
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: db-credentials
+          - name: DB_NAME
+            value: messages
+          image: arunponugotii/backend:latestmvp
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          name: backend
+          ports:
+          - containerPort: 3000
+            protocol: TCP
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /health
+              port: 3000
+              scheme: HTTP
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /app/logs
+            name: backend-logs
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: backend-logs
+          persistentVolumeClaim:
+            claimName: backend-logs-pvc
+  status:
+    availableReplicas: 2
+    fullyLabeledReplicas: 2
+    observedGeneration: 1
+    readyReplicas: 2
+    replicas: 2
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "1"
+      deployment.kubernetes.io/max-replicas: "2"
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2025-06-16T02:14:50Z"
+    generation: 1
+    labels:
+      app: database
+      pod-template-hash: 775f9cdfc5
+    name: database-deployment-775f9cdfc5
+    namespace: finsecure-banking
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: database-deployment
+      uid: ed05064e-6293-402d-aef7-0d0b295bf8bc
+    resourceVersion: "7629"
+    uid: 7588aea9-937a-4428-ab8a-d87056f49f5e
+  spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: database
+        pod-template-hash: 775f9cdfc5
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: database
+          pod-template-hash: 775f9cdfc5
+      spec:
+        containers:
+        - env:
+          - name: POSTGRES_USER
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: db-credentials
+          - name: POSTGRES_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: db-credentials
+          - name: POSTGRES_DB
+            value: messages
+          image: postgres:13-alpine
+          imagePullPolicy: IfNotPresent
+          name: postgres
+          ports:
+          - containerPort: 5432
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /var/lib/postgresql/data
+            name: postgres-data
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: postgres-data-pvc
+  status:
+    availableReplicas: 1
+    fullyLabeledReplicas: 1
+    observedGeneration: 1
+    readyReplicas: 1
+    replicas: 1
+- apiVersion: apps/v1
+  kind: ReplicaSet
+  metadata:
+    annotations:
+      deployment.kubernetes.io/desired-replicas: "2"
+      deployment.kubernetes.io/max-replicas: "3"
+      deployment.kubernetes.io/revision: "1"
+    creationTimestamp: "2025-06-16T02:15:04Z"
+    generation: 1
+    labels:
+      app: frontend
+      pod-template-hash: 6868fb4589
+    name: frontend-deployment-6868fb4589
+    namespace: finsecure-banking
+    ownerReferences:
+    - apiVersion: apps/v1
+      blockOwnerDeletion: true
+      controller: true
+      kind: Deployment
+      name: frontend-deployment
+      uid: 4deeb1ea-44b1-48c8-ae49-d6831058828d
+    resourceVersion: "7706"
+    uid: d8ca4fab-6485-4ca7-933f-f6243f47a081
+  spec:
+    replicas: 2
+    selector:
+      matchLabels:
+        app: frontend
+        pod-template-hash: 6868fb4589
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          app: frontend
+          pod-template-hash: 6868fb4589
+      spec:
+        containers:
+        - image: arunponugotii/frontend-ingress:latest
+          imagePullPolicy: Always
+          name: frontend
+          ports:
+          - containerPort: 80
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+  status:
+    availableReplicas: 2
+    fullyLabeledReplicas: 2
+    observedGeneration: 1
+    readyReplicas: 2
+    replicas: 2
+- apiVersion: batch/v1
+  kind: Job
+  metadata:
+    annotations:
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"batch/v1","kind":"Job","metadata":{"annotations":{},"name":"db-table-init-job","namespace":"finsecure-banking"},"spec":{"backoffLimit":3,"template":{"spec":{"containers":[{"command":["/bin/bash","-c","echo \"Starting table initialization...\"\n\n# Wait for database to be ready\nuntil pg_isready -h database-service -p 5432 -U postgres; do\n  echo \"Waiting for database to be ready...\"\n  sleep 2\ndone\necho \"Ô£à Database is ready!\"\n\n# Check if messages database exists (it should due to POSTGRES_DB=messages)\necho \"Checking available databases...\"\npsql -h database-service -U postgres -d messages -c \"\\l\"\n\n# Create table in messages database (database already exists)\necho \"Creating table in messages database...\"\npsql -h database-service -U postgres -d messages -f /docker-entrypoint-initdb.d/init.sql\n\necho \"Ô£à Table initialization completed!\"\n\n# Verify the setup\necho \"Verifying table structure...\"\npsql -h database-service -U postgres -d messages -c \"\\dt\"\necho \"Current messages:\"\npsql -h database-service -U postgres -d messages -c \"SELECT * FROM messages;\"\n"],"env":[{"name":"PGPASSWORD","valueFrom":{"secretKeyRef":{"key":"password","name":"db-credentials"}}}],"image":"postgres:13-alpine","name":"db-init","volumeMounts":[{"mountPath":"/docker-entrypoint-initdb.d","name":"init-script"}]}],"restartPolicy":"OnFailure","volumes":[{"configMap":{"name":"db-init-script-v2"},"name":"init-script"}]}}}}
+    creationTimestamp: "2025-06-16T02:15:17Z"
+    generation: 1
+    labels:
+      batch.kubernetes.io/controller-uid: 7073d978-215a-43d9-8628-dd18bae4bba7
+      batch.kubernetes.io/job-name: db-table-init-job
+      controller-uid: 7073d978-215a-43d9-8628-dd18bae4bba7
+      job-name: db-table-init-job
+    name: db-table-init-job
+    namespace: finsecure-banking
+    resourceVersion: "7769"
+    uid: 7073d978-215a-43d9-8628-dd18bae4bba7
+  spec:
+    backoffLimit: 3
+    completionMode: NonIndexed
+    completions: 1
+    manualSelector: false
+    parallelism: 1
+    podReplacementPolicy: TerminatingOrFailed
+    selector:
+      matchLabels:
+        batch.kubernetes.io/controller-uid: 7073d978-215a-43d9-8628-dd18bae4bba7
+    suspend: false
+    template:
+      metadata:
+        creationTimestamp: null
+        labels:
+          batch.kubernetes.io/controller-uid: 7073d978-215a-43d9-8628-dd18bae4bba7
+          batch.kubernetes.io/job-name: db-table-init-job
+          controller-uid: 7073d978-215a-43d9-8628-dd18bae4bba7
+          job-name: db-table-init-job
+      spec:
+        containers:
+        - command:
+          - /bin/bash
+          - -c
+          - |
+            echo "Starting table initialization..."
+
+            # Wait for database to be ready
+            until pg_isready -h database-service -p 5432 -U postgres; do
+              echo "Waiting for database to be ready..."
+              sleep 2
+            done
+            echo "Ô£à Database is ready!"
+
+            # Check if messages database exists (it should due to POSTGRES_DB=messages)
+            echo "Checking available databases..."
+            psql -h database-service -U postgres -d messages -c "\l"
+
+            # Create table in messages database (database already exists)
+            echo "Creating table in messages database..."
+            psql -h database-service -U postgres -d messages -f /docker-entrypoint-initdb.d/init.sql
+
+            echo "Ô£à Table initialization completed!"
+
+            # Verify the setup
+            echo "Verifying table structure..."
+            psql -h database-service -U postgres -d messages -c "\dt"
+            echo "Current messages:"
+            psql -h database-service -U postgres -d messages -c "SELECT * FROM messages;"
+          env:
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: db-credentials
+          image: postgres:13-alpine
+          imagePullPolicy: IfNotPresent
+          name: db-init
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+          - mountPath: /docker-entrypoint-initdb.d
+            name: init-script
+        dnsPolicy: ClusterFirst
+        restartPolicy: OnFailure
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+        volumes:
+        - configMap:
+            defaultMode: 420
+            name: db-init-script-v2
+          name: init-script
+  status:
+    completionTime: "2025-06-16T03:05:19Z"
+    conditions:
+    - lastProbeTime: "2025-06-16T03:05:19Z"
+      lastTransitionTime: "2025-06-16T03:05:19Z"
+      message: Reached expected number of succeeded pods
+      reason: CompletionsReached
+      status: "True"
+      type: SuccessCriteriaMet
+    - lastProbeTime: "2025-06-16T03:05:19Z"
+      lastTransitionTime: "2025-06-16T03:05:19Z"
+      message: Reached expected number of succeeded pods
+      reason: CompletionsReached
+      status: "True"
+      type: Complete
+    ready: 0
+    startTime: "2025-06-16T02:15:17Z"
+    succeeded: 1
+    terminating: 0
+    uncountedTerminatedPods: {}
+kind: List
+metadata:
+  resourceVersion: ""
